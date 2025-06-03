@@ -130,7 +130,7 @@ def main():
         st.download_button(
             label="💾 Download Results",
             data=csv,
-            file_name=f"website_status_{datetime.now().strftime('%Y%m%d')}.csv",
+            file_name=f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             mime='text/csv'
         )
 
