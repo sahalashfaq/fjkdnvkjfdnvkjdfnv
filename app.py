@@ -139,12 +139,12 @@ def main():
         )
 
         csv = st.session_state.results.to_csv(index=False)
-        file_name=f"website_status.csv"
+        file_name=f"website_status.xlsx"
         st.download_button(
             label="💾 Download Results",
             data=csv,
             file_name=file_name,
-            mime='text/csv'
+            mime='text/xlsx'
         )
 
 if __name__ == '__main__':
