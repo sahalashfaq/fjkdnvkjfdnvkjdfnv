@@ -43,13 +43,27 @@ def check_websites(urls):
         try:
             validated_url = validate_url(url)
             start_time = time.time()
-            response = requests.get(validated_url, headers=HEADERS, allow_redirects=True, timeout=10, stream=True)
+            response = requests.get(
+                validated_url,
+                headers=HEADERS,
+                allow_redirects=True,
+                timeout=10,
+                stream=True
+            )
             latency = round((time.time() - start_time) * 1000, 2)
+
+            status_code = response.status_code
+            if status_code < 400:
+                status = "Live"
+            elif status_code in [403, 429]:
+                status = "Likely Live"  # Blocked by bot protection
+            else:
+                status = "Down"
 
             results.append({
                 'original_url': url,
-                'status_code': response.status_code,
-                'status': 'Live' if response.status_code < 400 else 'Down',
+                'status_code': status_code,
+                'status': status,
                 'latency_ms': latency
             })
 
