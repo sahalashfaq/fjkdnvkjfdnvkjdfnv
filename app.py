@@ -139,12 +139,11 @@ def main():
         )
 
         csv = st.session_state.results.to_csv(index=False)
-        filename = f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-
+        file_name=f"website_status.csv"
         st.download_button(
             label="💾 Download Results",
             data=csv,
-            file_name=filename,
+            file_name=file_name,
             mime='text/csv'
         )
 
