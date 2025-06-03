@@ -5,9 +5,12 @@ import time
 from datetime import datetime
 from urllib.parse import urlparse
 
-# Constants
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-HEADERS = {'User-Agent': USER_AGENT}
+# Configuration
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+HEADERS = {
+    'User-Agent': USER_AGENT,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
+}
 
 # Inject custom CSS
 def inject_css():
@@ -27,16 +30,21 @@ def inject_css():
         color: #ffc107;
         font-weight: bold;
     }
+    .status-likely {
+        color: #17a2b8;
+        font-weight: bold;
+    }
     """
     st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
-# Validate and normalize URL
+# Normalize URL
 def validate_url(url):
     parsed = urlparse(url)
     if not parsed.scheme:
-        url = 'http://' + url
+        return 'http://' + url
     return url
 
+# Check websites using GET (reliable)
 def check_websites(urls):
     results = []
     for url in urls:
@@ -51,18 +59,18 @@ def check_websites(urls):
                 stream=True
             )
             latency = round((time.time() - start_time) * 1000, 2)
+            code = response.status_code
 
-            status_code = response.status_code
-            if status_code < 400:
+            if code < 400:
                 status = "Live"
-            elif status_code in [403, 429]:
-                status = "Likely Live"  # Blocked by bot protection
+            elif code in [403, 429]:
+                status = "Likely Live"
             else:
                 status = "Down"
 
             results.append({
                 'original_url': url,
-                'status_code': status_code,
+                'status_code': code,
                 'status': status,
                 'latency_ms': latency
             })
@@ -76,7 +84,7 @@ def check_websites(urls):
             })
     return pd.DataFrame(results)
 
-# Main app
+# Main app function
 def main():
     st.set_page_config(page_title="Website Status Checker", layout="centered")
     inject_css()
@@ -105,7 +113,7 @@ def main():
             with st.spinner("Checking websites..."):
                 st.session_state.results = check_websites(st.session_state.urls)
                 st.session_state.processing = False
-                st.success("Check completed.")
+                st.success("Website checking complete.")
 
     with col2:
         if st.button("🔄 Clear Results", disabled=st.session_state.results.empty):
@@ -115,25 +123,32 @@ def main():
         st.markdown("### Results")
 
         def status_icon(status):
-            if status == 'Live': return "🟢"
-            elif status == 'Down': return "🔴"
-            else: return "🟡"
+            return {
+                'Live': "🟢",
+                'Down': "🔴",
+                'Likely Live': "🔵",
+                'Error': "🟡"
+            }.get(status, "❓")
 
         display_df = st.session_state.results.copy()
         display_df['Status'] = display_df['status'].apply(
-            lambda x: f"<span class='status-{x.lower()}'>{status_icon(x)} {x}</span>",
+            lambda x: f"<span class='status-{x.lower().replace(' ', '-')}'>{status_icon(x)} {x}</span>"
         )
 
-        st.write(display_df[['original_url', 'Status', 'status_code', 'latency_ms']].to_html(escape=False, index=False), unsafe_allow_html=True)
+        st.write(
+            display_df[['original_url', 'Status', 'status_code', 'latency_ms']].to_html(escape=False, index=False),
+            unsafe_allow_html=True
+        )
 
         csv = st.session_state.results.to_csv(index=False)
-    st.download_button(
-    label="💾 Download Results",
-    data=csv,
-    file_name=f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-    mime='text/csv'
-)
+        filename = f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
+        st.download_button(
+            label="💾 Download Results",
+            data=csv,
+            file_name=filename,
+            mime='text/csv'
+        )
 
 if __name__ == '__main__':
     main()
