@@ -114,8 +114,6 @@ def main():
                 st.session_state.results = check_websites(st.session_state.urls)
                 st.session_state.processing = False
                 st.success("Website checking complete.")
-
-    with col2:
         if st.button("🔄 Clear Results", disabled=st.session_state.results.empty):
             st.session_state.results = pd.DataFrame()
 
