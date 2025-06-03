@@ -37,14 +37,13 @@ def validate_url(url):
         url = 'http://' + url
     return url
 
-# Perform website status check
 def check_websites(urls):
     results = []
     for url in urls:
         try:
             validated_url = validate_url(url)
             start_time = time.time()
-            response = requests.head(validated_url, headers=HEADERS, allow_redirects=True, timeout=10)
+            response = requests.get(validated_url, headers=HEADERS, allow_redirects=True, timeout=10, stream=True)
             latency = round((time.time() - start_time) * 1000, 2)
 
             results.append({
