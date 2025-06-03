@@ -118,7 +118,7 @@ def main():
             st.session_state.results = pd.DataFrame()
 
     if not st.session_state.results.empty:
-        st.markdown("### Results")
+        st.markdown("<p style='font-weight:600;'>Results</p>")
 
         def status_icon(status):
             return {
