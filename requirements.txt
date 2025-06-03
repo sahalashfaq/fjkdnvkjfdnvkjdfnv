@@ -1,0 +1,8 @@
+streamlit
+pandas
+requests
+flask
+base64
+datetime
+urllib.parse
+flask_cors
