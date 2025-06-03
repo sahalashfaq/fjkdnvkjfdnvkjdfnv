@@ -127,12 +127,13 @@ def main():
         st.write(display_df[['original_url', 'Status', 'status_code', 'latency_ms']].to_html(escape=False, index=False), unsafe_allow_html=True)
 
         csv = st.session_state.results.to_csv(index=False)
-        st.download_button(
-            label="💾 Download Results",
-            data=csv,
-            file_name=f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            mime='text/csv'
-        )
+    st.download_button(
+    label="💾 Download Results",
+    data=csv,
+    file_name=f"website_status_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+    mime='text/csv'
+)
+
 
 if __name__ == '__main__':
     main()
