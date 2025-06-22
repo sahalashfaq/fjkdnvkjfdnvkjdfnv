@@ -380,21 +380,6 @@ def main():
         page_icon="🌐"
     )
     inject_css()
-    
-    # Add custom header
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 2rem;">
-        <div style="display: grid; justify-content: center; align-items: center; text-align: center; height: 50px; transform: rotate(45deg);">
-            <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--indigo-color);"></div>
-            <div style="display: flex; gap: 5px; margin-top: 5px;">
-                <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--black);"></div>
-                <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--black);"></div>
-            </div>
-        </div>
-        <h1 class="logo-text">Seek<span>GPs</span> <span style="font-size: 1rem; color: var(--grey-color);">Website Status Checker</span></h1>
-    </div>
-    """, unsafe_allow_html=True)
-    
     st.markdown("Upload a CSV or Excel file containing website URLs to check their status while preserving all original data.")
 
     if 'results' not in st.session_state:
