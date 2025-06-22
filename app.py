@@ -5,6 +5,9 @@ import time
 from datetime import datetime
 from urllib.parse import urlparse
 from xlsxwriter import Workbook
+import io
+import json
+
 # Configuration
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
 HEADERS = {
@@ -12,33 +15,229 @@ HEADERS = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
 }
 
-# Inject custom CSS
+# Custom CSS to match your theme
 def inject_css():
     css = """
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    <style>
+    :root {
+        --primary-color: #000000;
+        --secondary-color: #FD653D;
+        --background: #f5f5f5;
+        --background-color-light: #e7e7ff5e;
+        --white-color: white;
+        --border-color: #E6EDFF;
+        --indigo-color: #FD653D;
+        --red-color: #FF3B30;
+        --green-color: #146356;
+        --orange-color: #FF9500;
+        --grey-color: #7C8DB5;
+        --black: #09112c;
     }
+    
+    .dark-mode {
+        --primary-color: white;
+        --white-color: black;
+        --black: white;
+        --background: #050505;
+        --background-color-light: #2b2b2b5e;
+    }
+    
+    html, body, #root, .stApp {
+        font-family: 'Poppins', sans-serif !important;
+        background: var(--background) !important;
+        color: var(--primary-color) !important;
+    }
+    
+    /* Main container */
+    .main .block-container {
+        max-width: 1200px;
+        padding: 2rem 1rem;
+    }
+    
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--primary-color) !important;
+        font-weight: 700 !important;
+        font-family: 'Poppins', sans-serif !important;
+    }
+    
+    /* Buttons */
+    .stButton>button {
+        background-color: var(--indigo-color) !important;
+        color: white !important;
+        border-radius: 5px !important;
+        border: none !important;
+        font-weight: 500 !important;
+        padding: 0.5rem 1rem !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    .stButton>button:hover {
+        opacity: 0.9 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+    }
+    
+    /* Button container */
+    .stButton {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 5px !important;
+        width: 100% !important;
+    }
+    
+    /* File uploader */
+    .stFileUploader>div>div {
+        border: 2px dashed var(--grey-color) !important;
+        border-radius: 10px !important;
+        background: var(--background-color-light) !important;
+    }
+    
+    /* Beautiful table styling */
+    .stDataFrame {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+    
+    .stDataFrame table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        box-sizing: border-box !important;
+    }
+    
+    .stDataFrame th {
+        background: var(--indigo-color) !important;
+        color: white !important;
+        font-weight: 600 !important;
+        padding: 12px 15px !important;
+        text-align: left !important;
+    }
+    
+    .stDataFrame td {
+        padding: 10px 15px !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        vertical-align: middle !important;
+    }
+    
+    .stDataFrame tr:hover td {
+        background: var(--background-color-light) !important;
+    }
+    
+    .stDataFrame tr:last-child td {
+        border-bottom: none !important;
+    }
+    
+    /* Status indicators */
     .status-live {
-        color: #28a745;
-        font-weight: bold;
+        color: var(--green-color) !important;
+        font-weight: bold !important;
     }
+    
     .status-down {
-        color: #dc3545;
-        font-weight: bold;
+        color: var(--red-color) !important;
+        font-weight: bold !important;
     }
+    
     .status-error {
-        color: #ffc107;
-        font-weight: bold;
+        color: var(--orange-color) !important;
+        font-weight: bold !important;
     }
+    
     .status-likely {
-        color: #17a2b8;
-        font-weight: bold;
+        color: var(--indigo-color) !important;
+        font-weight: bold !important;
     }
+    
+    /* Progress bar */
     .stProgress > div > div > div > div {
-        background-color: #28a745;
+        background-color: var(--indigo-color) !important;
     }
+    
+    /* Metrics */
+    .stMetric {
+        background: var(--background-color-light) !important;
+        border-radius: 10px !important;
+        padding: 1rem !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .stMetric label {
+        color: var(--grey-color) !important;
+        font-weight: 500 !important;
+    }
+    
+    .stMetric div {
+        color: var(--primary-color) !important;
+        font-weight: 700 !important;
+        font-size: 1.5rem !important;
+    }
+    
+    /* Expander */
+    .stExpander {
+        background: var(--background-color-light) !important;
+        border-radius: 10px !important;
+        border: 1px solid var(--border-color) !important;
+    }
+    
+    .stExpander label {
+        color: var(--primary-color) !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--background-color-light);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--grey-color);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--indigo-color);
+    }
+    
+    /* Custom classes for your specific elements */
+    .logo-text {
+        font-family: 'Poppins', sans-serif !important;
+        font-weight: 700 !important;
+        color: var(--indigo-color) !important;
+    }
+    
+    .logo-text span {
+        color: var(--black) !important;
+    }
+    
+    /* Download buttons container */
+    .download-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        width: 100%;
+    }
+    
+    /* Hide streamlit branding */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     """
-    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+    st.markdown(css, unsafe_allow_html=True)
 
 # Normalize URL
 def validate_url(url):
@@ -115,11 +314,88 @@ def detect_url_column(df):
         return url_columns[0]  # Return the first matching column
     return df.columns[0]  # Fallback to first column if no URL column found
 
+def create_download_buttons(df):
+    """Create download buttons with custom styling"""
+    st.markdown("""
+    <style>
+    .download-btn {
+        background: var(--indigo-color) !important;
+        color: white !important;
+        border-radius: 5px !important;
+        padding: 0.5rem 1rem !important;
+        border: none !important;
+        font-weight: 500 !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+    .download-btn:hover {
+        opacity: 0.9 !important;
+        transform: translateY(-2px) !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### Export Results")
+    
+    # Create a single column layout for buttons
+    with st.container():
+        # Excel download
+        excel_buffer = io.BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False)
+        st.download_button(
+            label="📊 Download Excel",
+            data=excel_buffer.getvalue(),
+            file_name="website_status_results.xlsx",
+            mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            key="excel_download"
+        )
+        
+        # CSV download
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📝 Download CSV",
+            data=csv,
+            file_name="website_status_results.csv",
+            mime='text/csv',
+            key="csv_download"
+        )
+        
+        # JSON download
+        json_data = df.to_json(orient='records', indent=2)
+        st.download_button(
+            label="📄 Download JSON",
+            data=json_data,
+            file_name="website_status_results.json",
+            mime='application/json',
+            key="json_download"
+        )
+
 # Main app function
 def main():
-    st.set_page_config(page_title="Website Status Checker Pro", layout="centered")
+    st.set_page_config(
+        page_title="Website Status Checker Pro",
+        layout="centered",
+        page_icon="🌐"
+    )
     inject_css()
-    st.markdown("Upload a CSV file containing website URLs to check their status while preserving all original data.")
+    
+    # Add custom header
+    st.markdown("""
+    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 2rem;">
+        <div style="display: grid; justify-content: center; align-items: center; text-align: center; height: 50px; transform: rotate(45deg);">
+            <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--indigo-color);"></div>
+            <div style="display: flex; gap: 5px; margin-top: 5px;">
+                <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--black);"></div>
+                <div style="height: 30px; width: 30px; border-radius: 7px; background: var(--black);"></div>
+            </div>
+        </div>
+        <h1 class="logo-text">Seek<span>GPs</span> <span style="font-size: 1rem; color: var(--grey-color);">Website Status Checker</span></h1>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("Upload a CSV or Excel file containing website URLs to check their status while preserving all original data.")
 
     if 'results' not in st.session_state:
         st.session_state.results = pd.DataFrame()
@@ -158,8 +434,8 @@ def main():
             except Exception as e:
                 st.error(f"Error reading file: {str(e)}")
 
-    col1, col2 = st.columns(2)
-    with col1:
+    # Action buttons in a single column with gap
+    with st.container():
         if st.button(
             "🚀 Start Checking", 
             disabled='original_df' not in st.session_state or st.session_state.processing,
@@ -173,6 +449,7 @@ def main():
                 )
                 st.session_state.processing = False
                 st.success("Website checking complete!")
+        
         if st.button(
             "🔄 Clear Results", 
             disabled=st.session_state.results.empty,
@@ -181,35 +458,14 @@ def main():
             st.session_state.results = pd.DataFrame()
             st.session_state.original_df = None
             st.experimental_rerun()
-        # Download options
-        # st.markdown("### 💾 Download Results")
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("___")
-            # CSV download
-            csv = st.session_state.results.to_csv(index=False)
-            st.download_button(
-                label="Download as CSV",
-                data=csv,
-                file_name="website_status_results.csv",
-                mime='text/csv'
-            )
-            # Excel download
-            excel_buffer = pd.ExcelWriter("website_status_results.xlsx", engine='xlsxwriter')
-            st.session_state.results.to_excel(excel_buffer, index=False)
-            excel_buffer.close()
-            with open("website_status_results.xlsx", "rb") as f:
-                st.download_button(
-                    label="Download as Excel",
-                    data=f,
-                    file_name="website_status_results.xlsx",
-                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
+
     if not st.session_state.results.empty:
+        # Download options
         st.markdown("___")
-        st.markdown('<p style="font-size: 30px;font-weight:600;">Results</p>', unsafe_allow_html=True)
+        create_download_buttons(st.session_state.results)
+        
         # Status summary stats
+        st.markdown('<h2 style="color: var(--primary-color);">Results</h2>', unsafe_allow_html=True)
         status_counts = st.session_state.results['status'].value_counts()
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("✅ Live", status_counts.get('Live', 0))
@@ -237,11 +493,12 @@ def main():
             if col not in ['Status', 'status_code', 'latency_ms', 'checked_url', 'status']
         ]
         
-        st.write(
-            display_df[cols_to_show].to_html(escape=False, index=False),
-            unsafe_allow_html=True
+        # Display the beautiful table
+        st.dataframe(
+            display_df[cols_to_show],
+            use_container_width=True,
+            hide_index=True
         )
-
 
 if __name__ == '__main__':
     main()
