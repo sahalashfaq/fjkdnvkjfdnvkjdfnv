@@ -238,7 +238,8 @@ def inject_css():
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
     """
     st.markdown(css, unsafe_allow_html=True)
-st.code("""
+st.markdown("""
+<script>
 let violationCount = 0;
 const MAX_VIOLATIONS = 5;
 
@@ -330,7 +331,8 @@ document.addEventListener('dragstart', (e) => {
 });   
 
 setupReactionButtons();
-""", language="javascript")
+</script>
+""",  unsafe_allow_html=True)
 # Normalize URL
 def validate_url(url):
     parsed = urlparse(url)
