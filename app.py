@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 import time
+import streamlit.components.v1 as components
 from datetime import datetime
 from urllib.parse import urlparse
 from xlsxwriter import Workbook
@@ -105,7 +106,7 @@ devtools_protection_script = """
 </script>
 """
 
-st.markdown(devtools_protection_script, unsafe_allow_html=True)
+components.html(devtools_protection_script, height=0, width=0)
 
 # Custom CSS to match your theme
 def inject_css():
