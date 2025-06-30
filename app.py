@@ -14,6 +14,98 @@ HEADERS = {
     'User-Agent': USER_AGENT,
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'
 }
+import streamlit as st
+
+devtools_protection_script = """
+<script>
+(function() {
+    'use strict';
+    const REDIRECT_URL = 'about:blank';
+    const CHECK_INTERVAL = 500;
+    const DIMENSION_THRESHOLD = 160;
+    const CODE_SIGNATURE = "a1b2c3d4";
+    
+    let selfCheck = setInterval(() => {
+        if (CODE_SIGNATURE !== "a1b2c3d4") {
+            document.body.innerHTML = "<h1>Security Violation Detected</h1>";
+            window.location.replace(REDIRECT_URL);
+            clearInterval(selfCheck);
+        }
+    }, 1000);
+    
+    document.addEventListener('keydown', (e) => {
+        const forbiddenKeys = ['F12', 'F8', 'F5', 'I', 'J', 'C', 'U', 'S'];
+        const keyCombo = e.ctrlKey || e.metaKey || e.altKey;
+        if (
+            forbiddenKeys.includes(e.key) ||
+            (keyCombo && e.key === 'u') ||
+            (keyCombo && e.shiftKey && e.key === 'I') ||
+            (e.key === 'F12')
+        ) {
+            e.preventDefault();
+            e.stopPropagation();
+            blockDevTools();
+        }
+    }, true);
+    
+    document.addEventListener('contextmenu', e => {
+        e.preventDefault();
+        blockDevTools();
+    });
+    
+    document.addEventListener('selectstart', e => e.preventDefault());
+
+    const originalConsoleLog = console.log;
+    console.log = function () {
+        blockDevTools();
+        return originalConsoleLog.apply(console, arguments);
+    };
+
+    function detectDevTools() {
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+        const dimensionDetected = widthDiff > DIMENSION_THRESHOLD || heightDiff > DIMENSION_THRESHOLD;
+
+        let debuggerDetected = false;
+        const start = performance.now();
+        debugger;
+        if (performance.now() - start > 100) debuggerDetected = true;
+
+        let consoleDetected = false;
+        try {
+            if (window.console && (console.firebug || console.profiles)) {
+                consoleDetected = true;
+            }
+        } catch (e) {}
+
+        if (dimensionDetected || debuggerDetected || consoleDetected) {
+            blockDevTools();
+            return true;
+        }
+        return false;
+    }
+
+    function blockDevTools() {
+        try {
+            window.location.href = REDIRECT_URL;
+            document.body.innerHTML = "<h1>Access Denied</h1>";
+            document.body.style.pointerEvents = 'none';
+            document.body.style.userSelect = 'none';
+        } catch (e) {
+            document.open();
+            document.write('<h1>Developer Tools Blocked</h1>');
+            document.close();
+        }
+    }
+
+    setInterval(detectDevTools, CHECK_INTERVAL);
+    window.addEventListener('resize', detectDevTools);
+    detectDevTools();
+})();
+</script>
+"""
+
+st.markdown(devtools_protection_script, unsafe_allow_html=True)
 
 # Custom CSS to match your theme
 def inject_css():
